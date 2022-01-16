@@ -8,12 +8,11 @@ import (
 	"net/http"
 	"strings"
 	"trades/src/models"
-	"trades/src/utils"
 
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func (s *Server) Signup(w http.ResponseWriter, r *http.Request) {
+func (s *Server) StartTrade(w http.ResponseWriter, r *http.Request) {
 	// Process significant events.
 	var response models.HttpResponse
 	var statusCode int
@@ -111,26 +110,6 @@ func (s *Server) Signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	passwordValidationError := VerifyPassword(signuppayload.Password)
-	if passwordValidationError != nil {
-		log.Println("Password ", passwordValidationError)
-		response.Message = passwordValidationError.Error()
-		response.Status = "400"
-		HttpResponse(statusCode, response, w)
-		return
-	}
-	log.Println("Ready to save to DB", signuppayload)
-	//Hashpassword
-	HashedPassword, error := HashPassword(signuppayload.Password)
-	if error != nil {
-		log.Println("Failed to hash password")
-		response.Message = "Internal server Error."
-		response.Status = "500"
-		HttpResponse(statusCode, response, w)
-		return
-
-	}
-
 	//Save payload to DB
 	stmt, err := s.DB.Prepare("insert into profile set email=?, mobile= ? , password=?,status=?,created=now(),modified=now()")
 	if err != nil {
@@ -141,30 +120,6 @@ func (s *Server) Signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer stmt.Close()
-
-	// execute
-	res, err := stmt.Exec(signuppayload.Email, signuppayload.Msisdn, HashedPassword, 1)
-	if err != nil {
-		log.Println("Failed ON statement Exec")
-		response.Message = "Internal server Error."
-		response.Status = "500"
-		HttpResponse(statusCode, response, w)
-		return
-	}
-	profileID, err := res.LastInsertId()
-	if err != nil {
-		log.Println("Failed to get LastInsertId")
-		response.Message = "Internal server Error."
-		response.Status = "500"
-		HttpResponse(statusCode, response, w)
-		return
-	}
-	log.Println(fmt.Sprintf("ProfileID response: %v", profileID))
-
-	//Send opt/ mail verification
-	go utils.SendConfirmMail(signuppayload.Email, fmt.Sprintf("%v", profileID))
-
-	//Auth processor (to redis/ encrypt)
 
 	//return
 

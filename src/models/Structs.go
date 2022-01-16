@@ -13,6 +13,25 @@ type SignupPayload struct {
 	ConfirmPassword string    `json:"confirm_password"`
 }
 
+type OfferDbQuery struct {
+	OfferID            int     `json:"offer_id"`
+	Type               string  `json:"type"`
+	MinFiatAmount      float64 `json:"min_fiat_amount"`
+	MaxFiatAmount      float64 `json:"max_fiat_amount"`
+	FiatCode           string  `json:"fiat_code"`
+	CryptoCode         string  `json:"crypto_code"`
+	FiatPricePerCrypto float64 `json:"fiat_price_per_crypto"`
+	Created            string  `json:"created"`
+	MaxCrypto          float64 `json:"max_crypto"`
+}
+
+type OfferQuery struct {
+	CountryID    StringInt   `json:"country_id"`
+	Fiat         string      `json:"fiat_code"`
+	FiatAmount   StringFloat `json:"fiat_amount"`
+	CryptoAmount StringFloat `json:"crypto_amount"`
+}
+
 type LoginPayload struct {
 	Email    string    `json:"email"`
 	Msisdn   StringInt `json:"msisdn"`
@@ -107,6 +126,26 @@ func (st *StringFloat) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+type ForexExchange struct {
+	Status    string `json:"status"`
+	Timestamp int    `json:"timestamp"`
+	Data      struct {
+		Count      int `json:"count"`
+		Currencies []struct {
+			Code              string `json:"code"`
+			Name              string `json:"name"`
+			NameLocalized     string `json:"name_localized"`
+			MinTradeAmountUsd string `json:"min_trade_amount_usd"`
+			Rate              struct {
+				Usd  float64 `json:"usd"`
+				Btc  float64 `json:"btc"`
+				Usdt float64 `json:"usdt"`
+				Eth  float64 `json:"eth"`
+			} `json:"rate"`
+		} `json:"currencies"`
+	} `json:"data"`
+}
+
 type FiatCurency struct {
 	FiatCurrencyId   int
 	FiatCurrencyCode string
@@ -122,31 +161,35 @@ type PaxfulOffers struct {
 		Count      int `json:"count"`
 		Totalcount int `json:"totalCount"`
 		Offers     []struct {
-			OfferID                    string        `json:"offer_id"`
-			OfferType                  string        `json:"offer_type"`
-			CurrencyCode               string        `json:"currency_code"`
-			FiatCurrencyCode           string        `json:"fiat_currency_code"`
-			CryptoCurrencyCode         string        `json:"crypto_currency_code"`
-			FiatPricePerCrypto         float64       `json:"fiat_price_per_crypto"`
-			FiatAmountRangeMin         int           `json:"fiat_amount_range_min"`
-			FiatAmountRangeMax         int           `json:"fiat_amount_range_max"`
-			PaymentMethodName          string        `json:"payment_method_name"`
-			Active                     bool          `json:"active"`
-			PaymentMethodSlug          string        `json:"payment_method_slug"`
-			PaymentMethodGroup         string        `json:"payment_method_group"`
-			OfferOwnerFeedbackPositive int           `json:"offer_owner_feedback_positive"`
-			OfferOwnerFeedbackNegative int           `json:"offer_owner_feedback_negative"`
-			LastSeen                   string        `json:"last_seen"`
-			LastSeenTimestamp          int           `json:"last_seen_timestamp"`
-			RequireVerifiedEmail       bool          `json:"require_verified_email"`
-			RequireVerifiedPhone       bool          `json:"require_verified_phone"`
-			RequireMinPastTrades       interface{}   `json:"require_min_past_trades"`
-			RequireVerifiedID          bool          `json:"require_verified_id"`
-			PaymentMethodLabel         string        `json:"payment_method_label"`
-			OfferTerms                 string        `json:"offer_terms"`
-			IsBlocked                  bool          `json:"is_blocked"`
-			Tags                       []interface{} `json:"tags"`
-			IsFeatured                 bool          `json:"is_featured"`
+			OfferID                    string      `json:"offer_id"`
+			OfferType                  string      `json:"offer_type"`
+			CurrencyCode               string      `json:"currency_code"`
+			FiatCurrencyCode           string      `json:"fiat_currency_code"`
+			CryptoCurrencyCode         string      `json:"crypto_currency_code"`
+			FiatPricePerCrypto         float64     `json:"fiat_price_per_crypto"`
+			FiatAmountRangeMin         int         `json:"fiat_amount_range_min"`
+			FiatAmountRangeMax         int         `json:"fiat_amount_range_max"`
+			PaymentMethodName          string      `json:"payment_method_name"`
+			Active                     bool        `json:"active"`
+			PaymentMethodSlug          string      `json:"payment_method_slug"`
+			PaymentMethodGroup         string      `json:"payment_method_group"`
+			OfferOwnerFeedbackPositive int         `json:"offer_owner_feedback_positive"`
+			OfferOwnerFeedbackNegative int         `json:"offer_owner_feedback_negative"`
+			LastSeen                   string      `json:"last_seen"`
+			LastSeenTimestamp          int         `json:"last_seen_timestamp"`
+			RequireVerifiedEmail       bool        `json:"require_verified_email"`
+			RequireVerifiedPhone       bool        `json:"require_verified_phone"`
+			RequireMinPastTrades       interface{} `json:"require_min_past_trades"`
+			RequireVerifiedID          bool        `json:"require_verified_id"`
+			PaymentMethodLabel         string      `json:"payment_method_label"`
+			OfferTerms                 string      `json:"offer_terms"`
+			IsBlocked                  bool        `json:"is_blocked"`
+			Tags                       []struct {
+				Name        string `json:"name"`
+				Slug        string `json:"slug"`
+				Description string `json:"description"`
+			} `json:"tags"`
+			IsFeatured bool `json:"is_featured"`
 		} `json:"offers"`
 	} `json:"data"`
 }
