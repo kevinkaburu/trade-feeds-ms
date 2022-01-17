@@ -57,7 +57,7 @@ func (s *Server) Offers(w http.ResponseWriter, r *http.Request) {
 
 
 	*/
-	selectOfferQuery := "select o.offer_id,o.type,o.min_fiat_amount,o.max_fiat_amount,f.currency_code fiat_code,cc.code crypto_code,o.fiat_price_per_crypto,o.created,(o.max_fiat_amount/o.fiat_price_per_crypto) max_crypto from offer o inner join fiat_currency f using (fiat_currency_id) inner join crypto_currency cc using (crypto_currency_id) where o.status = 1 %s order by o.fiat_price_per_crypto asc limit 100"
+	selectOfferQuery := "select o.offer_id,o.type,o.min_fiat_amount,o.max_fiat_amount,f.currency_code fiat_code,cc.code crypto_code,o.fiat_price_per_crypto,o.created,(o.max_fiat_amount/o.fiat_price_per_crypto) max_crypto from offer o inner join fiat_currency f using (fiat_currency_id) inner join crypto_currency cc using (crypto_currency_id) where o.status = 1 %s order by o.fiat_price_per_crypto asc limit 150"
 	whereAppend := ""
 
 	if int(offerParams.CountryID) > 0 {
@@ -77,7 +77,7 @@ func (s *Server) Offers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	query := fmt.Sprintf(selectOfferQuery, whereAppend)
-	fmt.Println(query)
+	//fmt.Println(query)
 	rows, err := s.DB.Query(query)
 	if err != nil {
 		log.Println(fmt.Sprintf("Unable to query Offers from DB: %s| error: %v ", query, err))
@@ -88,16 +88,32 @@ func (s *Server) Offers(w http.ResponseWriter, r *http.Request) {
 		if err = rows.Scan(&offer.OfferID, &offer.Type, &offer.MinFiatAmount, &offer.MaxFiatAmount, &offer.FiatCode, &offer.CryptoCode, &offer.FiatPricePerCrypto, &offer.Created, &offer.MaxCrypto); err != nil {
 			log.Printf("unable to read Offer record %v", err)
 		}
+
+		//fetch payment modes
+		PmodeQuery := fmt.Sprintf("select opm.tags, pm.label payment_method,pt.name payment_type from offer_payment_method opm inner join payment_method pm using (payment_method_id) inner join payment_type pt using (payment_type_id) where opm.offer_id = %v", offer.OfferID)
+		paymentRows, err := s.DB.Query(PmodeQuery)
+		if err != nil {
+			log.Println(fmt.Sprintf("Unable to query paymentRows from DB: %s| error: %v ", PmodeQuery, err))
+		}
+		var paymentmodes []models.PaymentMode
+		for paymentRows.Next() {
+			var pmode models.PaymentMode
+			if err = paymentRows.Scan(&pmode.Tags, &pmode.PaymentMethod, &pmode.PaymentType); err != nil {
+				log.Printf("unable to read paymentOptions record %v", err)
+			}
+			paymentmodes = append(paymentmodes, pmode)
+
+		}
+		offer.Payment = paymentmodes
+
 		Offers = append(Offers, offer)
 
 	}
-	fmt.Println(Offers)
 
 	response.Data = Offers
 
-	statusCode, response = 200, response
-	log.Println(fmt.Sprintf("Process response: %s| StatusCode: %v ", response, statusCode))
+	statusCode = 200
+	log.Println(fmt.Sprintf("Processed | StatusCode: %v ", statusCode))
 	HttpResponse(statusCode, response, w)
-	return
 
 }

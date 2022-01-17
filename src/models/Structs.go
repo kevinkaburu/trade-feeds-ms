@@ -14,15 +14,22 @@ type SignupPayload struct {
 }
 
 type OfferDbQuery struct {
-	OfferID            int     `json:"offer_id"`
-	Type               string  `json:"type"`
-	MinFiatAmount      float64 `json:"min_fiat_amount"`
-	MaxFiatAmount      float64 `json:"max_fiat_amount"`
-	FiatCode           string  `json:"fiat_code"`
-	CryptoCode         string  `json:"crypto_code"`
-	FiatPricePerCrypto float64 `json:"fiat_price_per_crypto"`
-	Created            string  `json:"created"`
-	MaxCrypto          float64 `json:"max_crypto"`
+	OfferID            int           `json:"offer_id"`
+	Type               string        `json:"type"`
+	MinFiatAmount      float64       `json:"min_fiat_amount"`
+	MaxFiatAmount      float64       `json:"max_fiat_amount"`
+	FiatCode           string        `json:"fiat_code"`
+	CryptoCode         string        `json:"crypto_code"`
+	Payment            []PaymentMode `json:"payment"`
+	FiatPricePerCrypto float64       `json:"fiat_price_per_crypto"`
+	Created            string        `json:"created"`
+	MaxCrypto          float64       `json:"max_crypto"`
+}
+
+type PaymentMode struct {
+	Tags          string `json:"tags"`
+	PaymentMethod string `json:"payment_method"`
+	PaymentType   string `json:"payment_type"`
 }
 
 type OfferQuery struct {
