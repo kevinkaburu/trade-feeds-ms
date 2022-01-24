@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"net/url"
 	"os"
 	"sync"
@@ -14,8 +13,6 @@ import (
 	"trades/src/models"
 
 	_ "github.com/go-sql-driver/mysql"
-	"golang.org/x/net/context"
-	"golang.org/x/oauth2/clientcredentials"
 )
 
 func (s *Server) PaxfulFetchOffers(wg *sync.WaitGroup) {
@@ -57,15 +54,7 @@ func (s *Server) PaxfulFetchOffers(wg *sync.WaitGroup) {
 
 func (s *Server) FetchActiveOffers() {
 	fmt.Println("Fetching Offers.... ")
-	//Get token
-	config := clientcredentials.Config{
-		ClientID:     os.Getenv("PAXFUL_VILLAGERS_APP_ID"),
-		ClientSecret: os.Getenv("PAXFUL_VILLAGERS_SECRET"),
-		TokenURL:     os.Getenv("PAXFUL_ACCESS_TOKEN_URL"),
-		Scopes:       []string{},
-	}
-	//setup context
-	client := config.Client(context.Background())
+
 	//fetch possible currencies from db
 
 	activeFiatsQuery := "select fiat_currency_id,currency_code from fiat_currency where status=1"
@@ -81,13 +70,12 @@ func (s *Server) FetchActiveOffers() {
 			log.Printf("unable to read Currency record %v", err)
 			continue
 		}
-		go s.httpOffers(client, fiats)
+		go s.httpOffers(fiats)
 	}
 
-	return
 }
 
-func (s *Server) httpOffers(c *http.Client, fiatCurrency models.FiatCurency) {
+func (s *Server) httpOffers(fiatCurrency models.FiatCurency) {
 	data := url.Values{}
 	data.Set("offer_type", "buy")
 	data.Set("type", "buy")
@@ -96,15 +84,17 @@ func (s *Server) httpOffers(c *http.Client, fiatCurrency models.FiatCurency) {
 	data.Set("crypto_currency_code", "usdt")
 	endpoint := fmt.Sprintf("%s/offer/all", os.Getenv("PAXFUL_BASE_URL"))
 	//http request
-	resp, err := c.PostForm(endpoint, data)
+	resp, err := s.PaxfulClient.PostForm(endpoint, data)
 	if err != nil {
-		panic(err)
+
+		log.Printf("error: %v", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		panic(err)
+
+		log.Printf("error: %v", err)
 
 	}
 	if resp.StatusCode >= 200 && resp.StatusCode <= 202 {
@@ -112,8 +102,8 @@ func (s *Server) httpOffers(c *http.Client, fiatCurrency models.FiatCurency) {
 
 		if err = json.Unmarshal(body, &paxfulOffers); err != nil {
 			fmt.Print("Unable to read response into struct because ", err)
-
 		}
+
 		provider_id := os.Getenv("PAXFUL_PROVIDER_ID")
 		UpdateOffersStatusQuery := "update offer set status = 0 where provider_id =? and fiat_currency_id = ?"
 		_, err = s.DB.Exec(UpdateOffersStatusQuery, provider_id, fiatCurrency.FiatCurrencyId)
@@ -190,27 +180,20 @@ func (s *Server) httpOffers(c *http.Client, fiatCurrency models.FiatCurency) {
 func (s *Server) httpforex() {
 	//Get token
 	fmt.Println("Fetching forex.... ")
-	config := clientcredentials.Config{
-		ClientID:     os.Getenv("PAXFUL_VILLAGERS_APP_ID"),
-		ClientSecret: os.Getenv("PAXFUL_VILLAGERS_SECRET"),
-		TokenURL:     os.Getenv("PAXFUL_ACCESS_TOKEN_URL"),
-		Scopes:       []string{},
-	}
-	//setup context
-	c := config.Client(context.Background())
+
 	data := url.Values{}
 
 	endpoint := fmt.Sprintf("%s/currency/list", os.Getenv("PAXFUL_BASE_URL"))
 	//http request
-	resp, err := c.PostForm(endpoint, data)
+	resp, err := s.PaxfulClient.PostForm(endpoint, data)
 	if err != nil {
-		panic(err)
+		log.Printf("error: %v", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		panic(err)
+		log.Printf("error: %v", err)
 
 	}
 	if resp.StatusCode >= 200 && resp.StatusCode <= 202 {

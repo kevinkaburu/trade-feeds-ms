@@ -1,7 +1,6 @@
 package models
 
 import (
-	"database/sql"
 	"encoding/json"
 	"strconv"
 )
@@ -11,6 +10,11 @@ type SignupPayload struct {
 	Msisdn          StringInt `json:"msisdn"`
 	Password        string    `json:"password"`
 	ConfirmPassword string    `json:"confirm_password"`
+}
+
+type OfferList struct {
+	Count  int            `json:"count"`
+	Offers []OfferDbQuery `json:"offers"`
 }
 
 type OfferDbQuery struct {
@@ -38,29 +42,13 @@ type OfferQuery struct {
 	FiatAmount   StringFloat `json:"fiat_amount"`
 	CryptoAmount StringFloat `json:"crypto_amount"`
 }
-
-type LoginPayload struct {
-	Email    string    `json:"email"`
-	Msisdn   StringInt `json:"msisdn"`
-	Password string    `json:"password"`
+type StartTradeQuery struct {
+	OfferID       StringInt   `json:"offer_id"`
+	FiatAmount    StringFloat `json:"fiat_amount"`
+	WalletAccount string      `json:"wallet_account"`
+	Token         string      `json:"token"`
 }
 
-type OtpPayload struct {
-	Email  string    `json:"email"`
-	Msisdn StringInt `json:"msisdn"`
-	Otp    StringInt `json:"otp"`
-}
-
-type Account struct {
-	ProfileID    int
-	CountryID    int
-	Msisdn       int
-	Balance      sql.NullFloat64
-	BonusBalance sql.NullFloat64
-	Points       sql.NullFloat64
-	PointsStatus sql.NullString
-	Frozen       sql.NullInt64
-}
 type HttpResponse struct {
 	Message string      `json:"message"`
 	Status  string      `json:"status"`
@@ -199,4 +187,147 @@ type PaxfulOffers struct {
 			IsFeatured bool `json:"is_featured"`
 		} `json:"offers"`
 	} `json:"data"`
+}
+
+type OfferGetData struct {
+	Data struct {
+		OfferHash                             string      `json:"offer_hash"`
+		ID                                    string      `json:"id"`
+		Margin                                int         `json:"margin"`
+		Active                                bool        `json:"active"`
+		BlockAnonymizerUsers                  bool        `json:"block_anonymizer_users"`
+		FiatAmountRangeMin                    int         `json:"fiat_amount_range_min"`
+		FiatAmountRangeMax                    int         `json:"fiat_amount_range_max"`
+		FeePercentage                         float64     `json:"fee_percentage"`
+		CryptoMin                             int         `json:"crypto_min"`
+		CryptoMax                             int64       `json:"crypto_max"`
+		OfferTerms                            string      `json:"offer_terms"`
+		ReleaseTime                           int         `json:"release_time"`
+		PaymentMethodLabel                    string      `json:"payment_method_label"`
+		PaymentMethodName                     string      `json:"payment_method_name"`
+		PaymentMethodSlug                     string      `json:"payment_method_slug"`
+		RequireVerifiedEmail                  bool        `json:"require_verified_email"`
+		RequireVerifiedPhone                  bool        `json:"require_verified_phone"`
+		ShowOnlyTrustedUser                   bool        `json:"show_only_trusted_user"`
+		RequireVerifiedID                     bool        `json:"require_verified_id"`
+		RequireOfferCurrencyMatchBuyerCountry bool        `json:"require_offer_currency_match_buyer_country"`
+		LastSeen                              string      `json:"last_seen"`
+		LastSeenTimestamp                     interface{} `json:"last_seen_timestamp"`
+		OfferLink                             string      `json:"offer_link"`
+		OfferOwnerCountryIso                  interface{} `json:"offer_owner_country_iso"`
+		OfferOwnerFeedbackNegative            int         `json:"offer_owner_feedback_negative"`
+		OfferOwnerFeedbackPositive            int         `json:"offer_owner_feedback_positive"`
+		OfferOwnerProfileLink                 string      `json:"offer_owner_profile_link"`
+		OfferOwnerUsername                    string      `json:"offer_owner_username"`
+		PaymentWindow                         int         `json:"payment_window"`
+		ReleaseTimeMedian                     int         `json:"release_time_median"`
+		CurrencyCode                          string      `json:"currency_code"`
+		FiatCurrencyCode                      string      `json:"fiat_currency_code"`
+		IsBlocked                             bool        `json:"is_blocked"`
+		PaymentMethodGroup                    string      `json:"payment_method_group"`
+		CryptoCurrency                        string      `json:"crypto_currency"`
+		CryptoCurrencyCode                    string      `json:"crypto_currency_code"`
+		IsFixedPrice                          bool        `json:"is_fixed_price"`
+		BankAccounts                          []struct {
+			BankName         string      `json:"bank_name"`
+			BankAccountUUID  string      `json:"bank_account_uuid"`
+			HolderName       interface{} `json:"holder_name"`
+			AccountNumber    interface{} `json:"account_number"`
+			FiatCurrencyCode interface{} `json:"fiat_currency_code"`
+			IsPersonal       interface{} `json:"is_personal"`
+			CountryIso       interface{} `json:"country_iso"`
+			SwiftCode        interface{} `json:"swift_code"`
+			Iban             interface{} `json:"iban"`
+			AdditionalInfo   interface{} `json:"additional_info"`
+			RoutingNumber    interface{} `json:"routing_number"`
+			Ifsc             interface{} `json:"ifsc"`
+			Clabe            interface{} `json:"clabe"`
+			BankUUID         interface{} `json:"bank_uuid"`
+		} `json:"bank_accounts"`
+		FlowType             string      `json:"flow_type"`
+		BankReferenceMessage interface{} `json:"bank_reference_message"`
+		TradeDetails         string      `json:"trade_details"`
+	} `json:"data"`
+	Status string `json:"status"`
+}
+
+type PaxfulAccount struct {
+	Data struct {
+		BankName             string      `json:"bank_name"`
+		BankAccountUUID      string      `json:"bank_account_uuid"`
+		HolderName           string      `json:"holder_name"`
+		AccountNumber        string      `json:"account_number"`
+		FiatCurrencyCode     string      `json:"fiat_currency_code"`
+		IsPersonal           bool        `json:"is_personal"`
+		CountryIso           string      `json:"country_iso"`
+		SwiftCode            string      `json:"swift_code"`
+		Iban                 interface{} `json:"iban"`
+		AdditionalInfo       interface{} `json:"additional_info"`
+		RoutingNumber        string      `json:"routing_number"`
+		Ifsc                 string      `json:"ifsc"`
+		Clabe                interface{} `json:"clabe"`
+		BankUUID             string      `json:"bank_uuid"`
+		InternationalDetails struct {
+			Residency interface{} `json:"residency"`
+			State     interface{} `json:"state"`
+			City      interface{} `json:"city"`
+			Zip       interface{} `json:"zip"`
+			Address   interface{} `json:"address"`
+		} `json:"international_details"`
+	} `json:"data"`
+	Status    string `json:"status"`
+	Timestamp int    `json:"timestamp"`
+}
+
+type PaxfulTradeStart struct {
+	Status    string `json:"status"`
+	Timestamp int    `json:"timestamp"`
+	Data      struct {
+		Success   bool   `json:"success"`
+		TradeHash string `json:"trade_hash"`
+	} `json:"data"`
+}
+
+type TradeChat struct {
+	Status    string `json:"status"`
+	Timestamp int    `json:"timestamp"`
+	Data      struct {
+		Messages []struct {
+			ID                string      `json:"id"`
+			Timestamp         int         `json:"timestamp"`
+			Type              string      `json:"type"`
+			TradeHash         string      `json:"trade_hash"`
+			IsForModerator    bool        `json:"is_for_moderator"`
+			Author            interface{} `json:"author"`
+			SecurityAwareness interface{} `json:"security_awareness"`
+			Status            int         `json:"status"`
+			Text              string      `json:"text"`
+			AuthorUUID        interface{} `json:"author_uuid"`
+			SentByModerator   bool        `json:"sent_by_moderator"`
+		} `json:"messages"`
+		Attachments []interface{} `json:"attachments"`
+	} `json:"data"`
+}
+
+type NewChatResponse struct {
+	Status    string `json:"status"`
+	Timestamp int    `json:"timestamp"`
+	Error     struct {
+		Code    int    `json:"code"`
+		Message string `json:"message"`
+	} `json:"error"`
+}
+
+type StartTradeResponse struct {
+	TradeID       int64          `json:"trade_id"`
+	TradeStatus   string         `json:"trade_status"`
+	PaymentMethod string         `json:"payment_method"`
+	Messages      []ChatMessages `json:"messages"`
+}
+
+type ChatMessages struct {
+	ID        uint64 `json:"id"`
+	Timestamp uint64 `json:"timestamp"`
+	Author    string `json:"author"`
+	Text      string `json:"text"`
 }

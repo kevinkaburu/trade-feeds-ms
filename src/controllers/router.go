@@ -12,7 +12,6 @@ func (s *Server) initializeRoutes() {
 	s.Router.HandleFunc("/trade/start", s.StartTrade).Methods("POST")
 	s.Router.HandleFunc("/user/login", s.Login).Methods("POST")
 	s.Router.HandleFunc("/trade/offer", s.Offers).Methods("POST")
-	s.Router.HandleFunc("/user/verify/otp", s.Otp).Methods("POST")
 	s.Router.HandleFunc("/user/kyc", s.Kyc).Methods("POST")
 	s.Router.HandleFunc("/user/logout", s.Logout).Methods("POST")
 

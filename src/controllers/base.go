@@ -16,12 +16,15 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"golang.org/x/net/context"
+	"golang.org/x/oauth2/clientcredentials"
 )
 
 type Server struct {
-	DB      *sql.DB
-	Router  *mux.Router
-	RedisDB *redis.Client
+	DB           *sql.DB
+	Router       *mux.Router
+	RedisDB      *redis.Client
+	PaxfulClient *http.Client
 }
 
 func (s *Server) Initialize() {
@@ -43,6 +46,16 @@ func (s *Server) Initialize() {
 
 	//init Router
 	s.initializeRoutes()
+	//init Http CLient
+	//Get token
+	config := clientcredentials.Config{
+		ClientID:     os.Getenv("PAXFUL_VILLAGERS_APP_ID"),
+		ClientSecret: os.Getenv("PAXFUL_VILLAGERS_SECRET"),
+		TokenURL:     os.Getenv("PAXFUL_ACCESS_TOKEN_URL"),
+		Scopes:       []string{},
+	}
+	//setup context
+	s.PaxfulClient = config.Client(context.Background())
 
 }
 func ValidateMail(email string) bool {
@@ -72,20 +85,6 @@ func HealthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, `{"alive": true}`)
 }
 
-///Sample shared function
-
-func (s *Server) FetchAccount(profileID int) (models.Account, error) {
-	var Account models.Account
-	query := "select p.profile_id,p.country_id,p.msisdn,pb.balance,pb.bonus_balance,bp.points,bp.status points_status,af.status frozen from profile p left join profile_balance pb using (profile_id) left join betika_point bp using(profile_id) left join account_freeze af using(msisdn) where profile_id=?;"
-	row := s.DB.QueryRow(query, profileID)
-
-	err := row.Scan(&Account.ProfileID, &Account.CountryID, &Account.Msisdn, &Account.Balance, &Account.BonusBalance, &Account.Points, &Account.PointsStatus, &Account.Frozen)
-	if err != nil {
-		return Account, err
-	}
-	return Account, nil
-
-}
 func IntDigitsCount(number int) int {
 	count := 0
 	for number != 0 {

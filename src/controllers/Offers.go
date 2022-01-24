@@ -18,8 +18,8 @@ func (s *Server) Offers(w http.ResponseWriter, r *http.Request) {
 
 	offerParamsBytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.Println("Unable to parse Signup request json, error: ", err)
-		response.Message = "Unable to parse Signup request"
+		log.Println("Unable to parse Offers request json, error: ", err)
+		response.Message = "Unable to parse request"
 		response.Status = "400"
 		HttpResponse(statusCode, response, w)
 		return
@@ -38,26 +38,8 @@ func (s *Server) Offers(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	/*
-			CountryID    StringInt   `json:"country_id"`
-			Fiat         string      `json:"Fiat"`
-			FiatAmount   StringFloat `json:"fiat_amount"`
-			CryptoAmount StringFloat `json:"crypto_amount"`
 
-
-			//
-		OfferID            int     `json:"offer_id"`
-		Type               string  `json:"type"`
-		MinFiatAmount      float64 `json:"min_fiat_amount"`
-		MaxFiatAmount      float64 `json:"max_fiat_amount"`
-		FiatCode           string  `json:"fiat_code"`
-		CryptoCode         string  `json:"crypto_code"`
-		FiatPricePerCrypto float64 `json:"fiat_price_per_crypto"`
-		Created            string  `json:"created"`
-
-
-	*/
-	selectOfferQuery := "select o.offer_id,o.type,o.min_fiat_amount,o.max_fiat_amount,f.currency_code fiat_code,cc.code crypto_code,o.fiat_price_per_crypto,o.created,(o.max_fiat_amount/o.fiat_price_per_crypto) max_crypto from offer o inner join fiat_currency f using (fiat_currency_id) inner join crypto_currency cc using (crypto_currency_id) where o.status = 1 %s order by o.fiat_price_per_crypto asc limit 150"
+	selectOfferQuery := "select o.offer_id,o.type,o.min_fiat_amount,o.max_fiat_amount,f.currency_code fiat_code,cc.code crypto_code,o.fiat_price_per_crypto,o.created,(o.max_fiat_amount/o.fiat_price_per_crypto) max_crypto from offer o inner join fiat_currency f using (fiat_currency_id) inner join crypto_currency cc using (crypto_currency_id) inner join offer_payment_method opm using (offer_id) inner join payment_method pm using (payment_method_id)  where o.status = 1 and pm.payment_type_id != 5 %s order by o.fiat_price_per_crypto asc limit 150"
 	whereAppend := ""
 
 	if int(offerParams.CountryID) > 0 {
@@ -109,10 +91,15 @@ func (s *Server) Offers(w http.ResponseWriter, r *http.Request) {
 		Offers = append(Offers, offer)
 
 	}
+	var OfferList models.OfferList
+	OfferList.Count = len(Offers)
+	OfferList.Offers = Offers
 
-	response.Data = Offers
+	response.Data = OfferList
+	response.Message = "Success"
 
 	statusCode = 200
+	response.Status = fmt.Sprintf("%d", statusCode)
 	log.Println(fmt.Sprintf("Processed | StatusCode: %v ", statusCode))
 	HttpResponse(statusCode, response, w)
 
