@@ -331,3 +331,9 @@ type ChatMessages struct {
 	Author    string `json:"author"`
 	Text      string `json:"text"`
 }
+
+type LiveChat struct {
+	Token   string    `json:"token"`
+	TradeID StringInt `json:"trade_id"`
+	Message string    `json:"message"`
+}
