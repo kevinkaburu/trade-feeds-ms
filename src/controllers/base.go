@@ -134,13 +134,13 @@ func (s *Server) FetchMessages(tradeID string) (tradechats models.TradeChat) {
 	//http request
 	resp, err := s.PaxfulClient.PostForm(endpoint, data)
 	if err != nil {
-		log.Printf("error: %v", err)
+		log.Printf("fetch chats error: %v", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("error: %v", err)
+		log.Printf("reach chats from paxful error: %v", err)
 
 	}
 	if resp.StatusCode >= 200 && resp.StatusCode <= 202 {
@@ -163,22 +163,24 @@ func (s *Server) SendMessage(tradeID, sms string) (status bool) {
 	//http request
 	resp, err := s.PaxfulClient.PostForm(endpoint, data)
 	if err != nil {
-		log.Printf("error: %v", err)
+		log.Printf("send paxful chat error: %v", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Printf("error: %v", err)
+		log.Printf("send paxful chat error: %v", err)
 
 	}
 	if resp.StatusCode >= 200 && resp.StatusCode <= 202 {
 		if err = json.Unmarshal(body, &newChatResponse); err != nil {
-			fmt.Print("Unable to read response into struct because ", err)
+			log.Printf("Unable to read response into struct because ", err)
 			return
 		}
 		if newChatResponse.Status == "success" {
 			status = true
+		} else {
+			log.Printf("Unable to paxful send chat", newChatResponse)
 		}
 		return
 

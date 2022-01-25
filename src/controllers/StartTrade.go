@@ -62,6 +62,7 @@ func (s *Server) StartTrade(w http.ResponseWriter, r *http.Request) {
 		HttpResponse(statusCode, response, w)
 		return
 	}
+
 	var (
 		OfferID       uint64
 		ProviderID    uint64
@@ -159,17 +160,18 @@ func (s *Server) StartTrade(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Unable to get TradeID error: %v", err)
 	}
 	//Fanya ile kitu. Call paxful and init a trade
-	log.Println(fmt.Sprintf("ID: %d", tradeID))
+	log.Println(fmt.Sprintf("TradeID created ... : %d", tradeID))
 	NewTrade := s.CreateTrade(paxfulOfferData.Data.OfferHash, float64(startTradePayload.FiatAmount))
 
 	if NewTrade.Status != "success" {
+		log.Printf(fmt.Sprintf("Unalbe it init trade. Response: %v", NewTrade))
 		UpdateTradeStatusQuery := "update trade set status = 'cancelled' where trade_id = ?"
 		_, err = s.DB.Exec(UpdateTradeStatusQuery, tradeID)
 		if err != nil {
 			log.Printf("PAXFUL update trade failed status: %v | unable to update  to offer  because %v", NewTrade.Status, err)
 
 		}
-
+		log.Printf(" Unlable to trade: %v", NewTrade)
 		response.Message = "We are not able to process this Offer at the moment."
 		response.Status = "400"
 		HttpResponse(statusCode, response, w)
