@@ -81,7 +81,7 @@ func (s *Server) httpOffers(fiatCurrency models.FiatCurency) {
 	data.Set("type", "buy")
 	data.Set("limit", "200")
 	data.Set("currency_code", fiatCurrency.FiatCurrencyCode)
-	data.Set("crypto_currency_code", "usdt")
+	data.Set("crypto_currency_code", "USDT")
 	endpoint := fmt.Sprintf("%s/offer/all", os.Getenv("PAXFUL_BASE_URL"))
 	//http request
 	resp, err := s.PaxfulClient.PostForm(endpoint, data)
@@ -103,13 +103,14 @@ func (s *Server) httpOffers(fiatCurrency models.FiatCurency) {
 		if err = json.Unmarshal(body, &paxfulOffers); err != nil {
 			fmt.Print("Unable to read response into struct because ", err)
 		}
-
 		provider_id := os.Getenv("PAXFUL_PROVIDER_ID")
-		UpdateOffersStatusQuery := "update offer set status = 0 where provider_id =? and fiat_currency_id = ?"
-		_, err = s.DB.Exec(UpdateOffersStatusQuery, provider_id, fiatCurrency.FiatCurrencyId)
-		if err != nil {
-			log.Printf("unable to update  to offer  because %v", err)
+		if len(paxfulOffers.Data.Offers) > 0 {
+			UpdateOffersStatusQuery := "update offer set status = 0 where provider_id =? and fiat_currency_id = ?"
+			_, err = s.DB.Exec(UpdateOffersStatusQuery, provider_id, fiatCurrency.FiatCurrencyId)
+			if err != nil {
+				log.Printf("unable to update  to offer  because %v", err)
 
+			}
 		}
 
 		for i := 0; i < len(paxfulOffers.Data.Offers); i++ {
@@ -136,6 +137,13 @@ func (s *Server) httpOffers(fiatCurrency models.FiatCurency) {
 				continue
 			}
 
+			var ChainID int64
+			cquery := "SELECT chain_id from chain WHERE chain_code='ETH'"
+			err = s.DB.QueryRow(cquery).Scan(&ChainID)
+			if err != nil {
+				continue
+			}
+
 			insertPaymentQuery := "insert ignore into payment_method (label,payment_type_id	) values (?,?)"
 			_, err = s.DB.Exec(insertPaymentQuery, payment_method_name, PaymenttypeID)
 			if err != nil {
@@ -143,8 +151,8 @@ func (s *Server) httpOffers(fiatCurrency models.FiatCurency) {
 
 			}
 
-			insertOffer := "insert  into offer (provider_id,profile_id,type,external_id,min_fiat_amount,max_fiat_amount,fiat_currency_id,crypto_currency_id,fiat_price_per_crypto,created,modified, status) VALUES (?,?,?,?,?,?,?,?,?,now(),now(),1) ON DUPLICATE KEY UPDATE min_fiat_amount=?,max_fiat_amount=?,fiat_price_per_crypto=?, modified = now(), status= 1;"
-			OfferObject, err := s.DB.Exec(insertOffer, provider_id, profile_id, offertype, external_id, min_fiat_amount, max_fiat_amount, fiatCurrency.FiatCurrencyId, crypto_currency_id, fiat_price_per_crypto, min_fiat_amount, max_fiat_amount, fiat_price_per_crypto)
+			insertOffer := "insert  into offer (chain_id,provider_id,profile_id,type,external_id,min_fiat_amount,max_fiat_amount,fiat_currency_id,crypto_currency_id,fiat_price_per_crypto,created,modified, status) VALUES (?,?,?,?,?,?,?,?,?,?,now(),now(),1) ON DUPLICATE KEY UPDATE min_fiat_amount=?,max_fiat_amount=?,fiat_price_per_crypto=?, modified = now(), status= 1;"
+			OfferObject, err := s.DB.Exec(insertOffer, ChainID, provider_id, profile_id, offertype, external_id, min_fiat_amount, max_fiat_amount, fiatCurrency.FiatCurrencyId, crypto_currency_id, fiat_price_per_crypto, min_fiat_amount, max_fiat_amount, fiat_price_per_crypto)
 			if err != nil {
 				log.Printf("unable to insert to db to %v because %v", paxfulOffers.Data.Offers[i].OfferID, err)
 				return

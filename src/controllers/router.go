@@ -14,5 +14,9 @@ func (s *Server) initializeRoutes() {
 	s.Router.HandleFunc("/user/login", s.Login).Methods("POST")
 	s.Router.HandleFunc("/trade/offer", s.Offers).Methods("POST")
 	s.Router.HandleFunc("/user/logout", s.Logout).Methods("POST")
+	s.Router.HandleFunc("/trade/chains", s.SupportedChains).Methods("GET")
+	s.Router.HandleFunc("/trade/countries", s.SupportedCountries).Methods("GET")
+	s.Router.HandleFunc("/trade/paymentmethods", s.SupportedPaymentMethods).Methods("GET")
+	s.Router.HandleFunc("/trade/Stablecoins", s.SupportedTokens).Methods("GET")
 
 }

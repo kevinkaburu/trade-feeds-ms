@@ -5,11 +5,38 @@ import (
 	"strconv"
 )
 
+type SupportedCountries struct {
+	//c.country_id,c.name,c.iso_code,fc.fiat_currency_id,fc.currency_code
+	CountryID       uint64 `json:"country_id"`
+	CountryName     string `json:"country_name"`
+	CountryCode     string `json:"country_code"`
+	FiatCurrencyId  uint64 `json:"fiat_currency_id"`
+	FiatCurencyCode string `json:"fiat_currency_code"`
+}
+type SupportedPaymentMethods struct {
+	//payment_method_id,label,payment_type_id
+	PaymentMethodId   uint64 `json:"payment_method_id"`
+	PaymentMethodName string `json:"payment_method_name"`
+	PaymentTypeID     uint64 `json:"payment_type_id"`
+}
+type SupportedChains struct {
+	//chain_name	block_chain_id	chain_code
+	ChainName    string `json:"chain_name"`
+	BlockChainId string `json:"blockchain_id"`
+	ChainCode    string `json:"chain_code"`
+}
+
 type SignupPayload struct {
 	Email           string    `json:"email"`
 	Msisdn          StringInt `json:"msisdn"`
 	Password        string    `json:"password"`
 	ConfirmPassword string    `json:"confirm_password"`
+}
+type SupportedTokens struct {
+	//c.crypto_currency_id,c.name,c.code
+	CryptoCurrencyId uint64 `json:"crypto_currency_id"`
+	CryptoName       string `json:"crypto_name"`
+	CryptoCode       string `json:"crypto_code"`
 }
 
 type OfferList struct {
@@ -19,6 +46,7 @@ type OfferList struct {
 
 type OfferDbQuery struct {
 	OfferID            int           `json:"offer_id"`
+	BlockChainId       string        `blockchain_id`
 	Type               string        `json:"type"`
 	MinFiatAmount      float64       `json:"min_fiat_amount"`
 	MaxFiatAmount      float64       `json:"max_fiat_amount"`
