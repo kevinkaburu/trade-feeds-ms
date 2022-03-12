@@ -45,8 +45,18 @@ type OfferList struct {
 }
 
 type OfferDbQuery struct {
+	//fe.usd_exchange, fe.forex_exchange_id
+	ForexExchangeID    int           `json:"forex_exchange_id"`
+	ForexExchangeUsd   StringFloat   `json:"usd_exchange_rate"`
+	ChainName          string        `json:"chain_name"`
+	ChainCode          string        `json:"chain_code"`
+	ChainID            string        `json:"chain_id"`
+	CountryID          int           `json:"country_id"`
+	CountryFlag        string        `json:"country_flag"`
+	CountryCode        string        `json:"country_code"`
+	CountryName        string        `json:"country_name"`
 	OfferID            int           `json:"offer_id"`
-	BlockChainId       string        `blockchain_id`
+	BlockChainId       string        `json:"blockchain_id"`
 	Type               string        `json:"type"`
 	MinFiatAmount      float64       `json:"min_fiat_amount"`
 	MaxFiatAmount      float64       `json:"max_fiat_amount"`
