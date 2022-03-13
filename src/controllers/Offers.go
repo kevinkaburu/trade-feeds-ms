@@ -39,7 +39,7 @@ func (s *Server) Offers(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	selectOfferQuery := "select fe.usd_exchange, fe.forex_exchange_id, c.chain_name,c.chain_code,c.block_chain_id,cy.country_id,cy.iso_code,cy.name country_name,o.offer_id,c.block_chain_id,o.type,o.min_fiat_amount,o.max_fiat_amount,f.currency_code fiat_code,cc.code crypto_code,o.fiat_price_per_crypto,o.created,(o.max_fiat_amount/o.fiat_price_per_crypto) max_crypto from offer o inner join chain c using (chain_id) inner join fiat_currency f using (fiat_currency_id) inner join forex_exchange fe using(fiat_currency_id) inner join country cy using(country_id) inner join crypto_currency cc using (crypto_currency_id) inner join offer_payment_method opm using (offer_id) inner join payment_method pm using (payment_method_id)  where o.status = 1 and pm.payment_type_id != 5 %s  group by o.offer_id order by o.offer_id,o.fiat_price_per_crypto asc limit 150"
+	selectOfferQuery := "select cc.crypto_currency_id,fe.usd_exchange, fe.forex_exchange_id, c.chain_name,c.chain_code,c.block_chain_id,cy.country_id,cy.iso_code,cy.name country_name,o.offer_id,c.block_chain_id,o.type,o.min_fiat_amount,o.max_fiat_amount,f.currency_code fiat_code,cc.code crypto_code,o.fiat_price_per_crypto,o.created,(o.max_fiat_amount/o.fiat_price_per_crypto) max_crypto from offer o inner join chain c using (chain_id) inner join fiat_currency f using (fiat_currency_id) inner join forex_exchange fe using(fiat_currency_id) inner join country cy using(country_id) inner join crypto_currency cc using (crypto_currency_id) inner join offer_payment_method opm using (offer_id) inner join payment_method pm using (payment_method_id)  where o.status = 1 and pm.payment_type_id != 5 %s  group by o.offer_id order by o.offer_id,o.fiat_price_per_crypto asc limit 150"
 	whereAppend := ""
 
 	if int(offerParams.CountryID) > 0 {
@@ -68,12 +68,12 @@ func (s *Server) Offers(w http.ResponseWriter, r *http.Request) {
 	var Offers []models.OfferDbQuery
 	for rows.Next() {
 		var offer models.OfferDbQuery
-		if err = rows.Scan(&offer.ForexExchangeUsd, &offer.ForexExchangeID, &offer.ChainName, &offer.ChainCode, &offer.ChainID, &offer.CountryID, &offer.CountryCode, &offer.CountryName, &offer.OfferID, &offer.BlockChainId, &offer.Type, &offer.MinFiatAmount, &offer.MaxFiatAmount, &offer.FiatCode, &offer.CryptoCode, &offer.FiatPricePerCrypto, &offer.Created, &offer.MaxCrypto); err != nil {
+		if err = rows.Scan(&offer.CryptoCurrencyId, &offer.ForexExchangeUsd, &offer.ForexExchangeID, &offer.ChainName, &offer.ChainCode, &offer.ChainID, &offer.CountryID, &offer.CountryCode, &offer.CountryName, &offer.OfferID, &offer.BlockChainId, &offer.Type, &offer.MinFiatAmount, &offer.MaxFiatAmount, &offer.FiatCode, &offer.CryptoCode, &offer.FiatPricePerCrypto, &offer.Created, &offer.MaxCrypto); err != nil {
 			log.Printf("unable to read Offer record %v", err)
 		}
 
 		//fetch payment modes
-		PmodeQuery := fmt.Sprintf("select opm.tags, pm.label payment_method,pt.name payment_type from offer_payment_method opm inner join payment_method pm using (payment_method_id) inner join payment_type pt using (payment_type_id) where opm.offer_id = %v", offer.OfferID)
+		PmodeQuery := fmt.Sprintf("select pm.payment_method_id,opm.tags, pm.label payment_method,pt.name payment_type from offer_payment_method opm inner join payment_method pm using (payment_method_id) inner join payment_type pt using (payment_type_id) where opm.offer_id = %v", offer.OfferID)
 		paymentRows, err := s.DB.Query(PmodeQuery)
 		if err != nil {
 			log.Println(fmt.Sprintf("Unable to query paymentRows from DB: %s| error: %v ", PmodeQuery, err))
@@ -81,7 +81,7 @@ func (s *Server) Offers(w http.ResponseWriter, r *http.Request) {
 		var paymentmodes []models.PaymentMode
 		for paymentRows.Next() {
 			var pmode models.PaymentMode
-			if err = paymentRows.Scan(&pmode.Tags, &pmode.PaymentMethod, &pmode.PaymentType); err != nil {
+			if err = paymentRows.Scan(&pmode.PaymentMethodId, &pmode.Tags, &pmode.PaymentMethod, &pmode.PaymentType); err != nil {
 				log.Printf("unable to read paymentOptions record %v", err)
 			}
 			paymentmodes = append(paymentmodes, pmode)

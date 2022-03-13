@@ -24,6 +24,7 @@ func (s *Server) SupportedCountries(w http.ResponseWriter, r *http.Request) {
 		if err = rows.Scan(&countries.CountryID, &countries.CountryName, &countries.CountryCode, &countries.FiatCurrencyId, &countries.FiatCurencyCode); err != nil {
 			log.Printf("unable to read supported Chain record %v", err)
 		}
+		countries.CountryFlag = fmt.Sprintf("https://flagcdn.com/16x12/%s.png", countries.CountryCode)
 
 		supportedCountries = append(supportedCountries, countries)
 	}

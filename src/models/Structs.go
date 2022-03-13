@@ -8,6 +8,7 @@ import (
 type SupportedCountries struct {
 	//c.country_id,c.name,c.iso_code,fc.fiat_currency_id,fc.currency_code
 	CountryID       uint64 `json:"country_id"`
+	CountryFlag     string `json:"country_flag"`
 	CountryName     string `json:"country_name"`
 	CountryCode     string `json:"country_code"`
 	FiatCurrencyId  uint64 `json:"fiat_currency_id"`
@@ -45,7 +46,8 @@ type OfferList struct {
 }
 
 type OfferDbQuery struct {
-	//fe.usd_exchange, fe.forex_exchange_id
+	//crypto_currency_id
+	CryptoCurrencyId   int           `json:"crypto_currency_id"`
 	ForexExchangeID    int           `json:"forex_exchange_id"`
 	ForexExchangeUsd   StringFloat   `json:"usd_exchange_rate"`
 	ChainName          string        `json:"chain_name"`
@@ -69,9 +71,10 @@ type OfferDbQuery struct {
 }
 
 type PaymentMode struct {
-	Tags          string `json:"tags"`
-	PaymentMethod string `json:"payment_method"`
-	PaymentType   string `json:"payment_type"`
+	PaymentMethodId int    `json:"payment_method_id"`
+	Tags            string `json:"tags"`
+	PaymentMethod   string `json:"payment_method"`
+	PaymentType     string `json:"payment_type"`
 }
 
 type OfferQuery struct {
