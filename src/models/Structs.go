@@ -47,6 +47,7 @@ type OfferList struct {
 
 type OfferDbQuery struct {
 	//crypto_currency_id
+	PercentDiff        StringFloat   `json:"percent_diff"`
 	CryptoCurrencyId   int           `json:"crypto_currency_id"`
 	ForexExchangeID    int           `json:"forex_exchange_id"`
 	ForexExchangeUsd   StringFloat   `json:"usd_exchange_rate"`
