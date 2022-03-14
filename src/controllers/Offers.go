@@ -46,16 +46,16 @@ func (s *Server) Offers(w http.ResponseWriter, r *http.Request) {
 		whereAppend += fmt.Sprintf(" and f.country_id=%d", int(offerParams.CountryID))
 
 	}
-	if len(offerParams.Fiat) == 3 {
-		whereAppend += fmt.Sprintf(" and f.currency_code='%s'", offerParams.Fiat)
+	if int(offerParams.CryptoID) > 0 {
+		whereAppend += fmt.Sprintf(" and cc.crypto_currency_id=%d", int(offerParams.CryptoID))
 	}
 
-	if float64(offerParams.FiatAmount) > 0.0 {
-		whereAppend += fmt.Sprintf(" and o.max_fiat_amount > %f", float64(offerParams.FiatAmount))
+	if int(offerParams.BlockchainID) > 0 {
+		whereAppend += fmt.Sprintf(" and c.block_chain_id = %d", int(offerParams.BlockchainID))
 	}
 
-	if float64(offerParams.CryptoAmount) > 0.0 {
-		whereAppend += fmt.Sprintf(" and crptos > %f", float64(offerParams.CryptoAmount))
+	if int(offerParams.PaymentMethodID) > 0 {
+		whereAppend += fmt.Sprintf(" and opm.payment_method_id = %d", int(offerParams.PaymentMethodID))
 	}
 
 	query := fmt.Sprintf(selectOfferQuery, whereAppend)

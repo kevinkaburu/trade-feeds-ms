@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"trades/src/models"
@@ -31,7 +30,6 @@ func (s *Server) SupportedTokens(w http.ResponseWriter, r *http.Request) {
 	res.Data = supportedTokens
 	res.Message = "Success"
 	res.Status = "200"
-	log.Println(fmt.Sprintf("Process response: %s| StatusCode: %v ", res, res.Status))
 	HttpResponse(200, res, w)
 
 }

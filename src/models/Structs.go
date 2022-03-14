@@ -78,10 +78,10 @@ type PaymentMode struct {
 }
 
 type OfferQuery struct {
-	CountryID    StringInt   `json:"country_id"`
-	Fiat         string      `json:"fiat_code"`
-	FiatAmount   StringFloat `json:"fiat_amount"`
-	CryptoAmount StringFloat `json:"crypto_amount"`
+	CountryID       StringInt   `json:"country_id"`
+	CryptoID        StringInt   `json:"crypto_currency_id"`
+	BlockchainID    StringInt   `json:"blockchain_id"`
+	PaymentMethodID StringFloat `json:"payment_method_id"`
 }
 type StartTradeQuery struct {
 	OfferID       StringInt   `json:"offer_id"`

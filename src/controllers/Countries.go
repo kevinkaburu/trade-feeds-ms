@@ -32,7 +32,6 @@ func (s *Server) SupportedCountries(w http.ResponseWriter, r *http.Request) {
 	res.Data = supportedCountries
 	res.Message = "Success"
 	res.Status = "200"
-	log.Println(fmt.Sprintf("Process response: %s| StatusCode: %v ", res, res.Status))
 	HttpResponse(200, res, w)
 
 }
