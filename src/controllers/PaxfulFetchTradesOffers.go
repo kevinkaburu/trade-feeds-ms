@@ -124,6 +124,7 @@ func (s *Server) httpOffers(fiatCurrency models.FiatCurency) {
 			fiat_price_per_crypto := paxfulOffers.Data.Offers[i].FiatPricePerCrypto
 			payment_method_group := paxfulOffers.Data.Offers[i].PaymentMethodGroup
 			payment_method_name := paxfulOffers.Data.Offers[i].PaymentMethodName
+			lastSeen := paxfulOffers.Data.Offers[i].LastSeenTimestamp
 			insertPaymentGroupQuery := "insert ignore into payment_type (name) values (?)"
 			_, err := s.DB.Exec(insertPaymentGroupQuery, payment_method_group)
 			if err != nil {
@@ -172,6 +173,13 @@ func (s *Server) httpOffers(fiatCurrency models.FiatCurency) {
 			OfferID, err := OfferObject.LastInsertId()
 			insertOfferPaymentQuery := "insert ignore into offer_payment_method (offer_id,payment_method_id,tags) values(?,?,?)"
 			_, err = s.DB.Exec(insertOfferPaymentQuery, OfferID, PaymentMethodID, tags)
+			if err != nil {
+				log.Printf("unable to insert to offer_payment_method %v because %v", tags, err)
+
+			}
+
+			insertOfferLastSeen := "insert into offer_last_seen (offer_id,last_seen) values(?,?) ON DUPLICATE KEY UPDATE last_seen=?"
+			_, err = s.DB.Exec(insertOfferLastSeen, OfferID, lastSeen, lastSeen)
 			if err != nil {
 				log.Printf("unable to insert to offer_payment_method %v because %v", tags, err)
 
