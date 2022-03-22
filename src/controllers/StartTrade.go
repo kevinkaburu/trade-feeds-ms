@@ -10,6 +10,7 @@ import (
 	"os"
 	"strconv"
 	"trades/src/models"
+	"trades/src/utils"
 
 	_ "github.com/go-sql-driver/mysql"
 )
@@ -19,6 +20,26 @@ func (s *Server) StartTrade(w http.ResponseWriter, r *http.Request) {
 	var response models.HttpResponse
 	var statusCode int
 	statusCode = 400
+
+	tokenCookie, err := r.Cookie("vlg")
+	if err != nil {
+		log.Println("Unable to fetch tokenCookie error: ", err)
+		response.Message = "Unable to parse request"
+		response.Status = "400"
+		HttpResponse(statusCode, response, w)
+		return
+	}
+	//fetch data from redis/ for auth
+	redisData, errr := utils.FetchDataFromRedis(tokenCookie.Value, s.RedisDB)
+	if errr != nil {
+		fmt.Printf("Redis Fetch Naounce Failed: %s\n", errr)
+	}
+	var redisWalletData models.WalletAuth
+	if err = json.Unmarshal([]byte(redisData), &redisWalletData); err != nil {
+		log.Println("Unable to parse  Redis  Json  because ", err)
+		return
+	}
+
 	requestBytes, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		log.Println("Unable to parse StartTrade request json, error: ", err)
@@ -58,6 +79,15 @@ func (s *Server) StartTrade(w http.ResponseWriter, r *http.Request) {
 	if len(startTradePayload.WalletAccount) < 26 {
 		log.Println(fmt.Printf("Invalid wallet Addres: %v | Length: %v", startTradePayload.WalletAccount, len(startTradePayload.WalletAccount)))
 		response.Message = "Invalid wallet Address"
+		response.Status = "400"
+		HttpResponse(statusCode, response, w)
+		return
+	}
+
+	//Wallet == yo yhe current Auth'd
+	if startTradePayload.WalletAccount != redisWalletData.Walletdata.Address {
+		log.Println(fmt.Printf("Auth'd wallet Addres: %v | UserWallet: %v", redisWalletData.Walletdata.Address, startTradePayload.WalletAccount))
+		response.Message = "Authentication failed. Connect your wallet to proceed."
 		response.Status = "400"
 		HttpResponse(statusCode, response, w)
 		return
@@ -275,17 +305,20 @@ func (s *Server) CreateTrade(offerID string, fiatAmount float64) (tradeStart mod
 	data := url.Values{}
 	data.Set("offer_hash", offerID)
 	data.Set("fiat", fmt.Sprintf("%f", fiatAmount))
-	endpoint := fmt.Sprintf("%s/trade/start", os.Getenv("PAXFUL_BASE_URL"))
+	//endpoint := fmt.Sprintf("%s/trade/start", os.Getenv("PAXFUL_BASE_URL"))
+	endpoint := ""
 	//http request
 	resp, err := s.PaxfulClient.PostForm(endpoint, data)
 	if err != nil {
 		log.Printf("error: %v", err)
+		return
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Printf("error: %v", err)
+		return
 
 	}
 	if resp.StatusCode >= 200 && resp.StatusCode <= 202 {

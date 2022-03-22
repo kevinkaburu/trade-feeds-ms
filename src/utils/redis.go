@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/go-redis/redis/v7"
+	"github.com/go-redis/redis"
 )
 
 // SaveDataToRedis : receives sessionID, json string to save and redisClient to save to redis. Returns error if sessionID already exists

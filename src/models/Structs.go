@@ -44,6 +44,17 @@ type OfferList struct {
 	Count  int            `json:"count"`
 	Offers []OfferDbQuery `json:"offers"`
 }
+type WalletAuth struct {
+	Walletdata struct {
+		Signiture      string `json:"signiture"`
+		Nounce         string `json:"nounce"`
+		Displayaddress string `json:"displayAddress"`
+		Address        string `json:"Address"`
+		Chainid        string `json:"chainId"`
+		Isconnected    bool   `json:"isconnected"`
+		Errormessage   string `json:"errorMessage"`
+	} `json:"walletData"`
+}
 
 type OfferDbQuery struct {
 	//crypto_currency_id

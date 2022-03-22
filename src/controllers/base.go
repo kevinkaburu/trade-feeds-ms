@@ -47,6 +47,17 @@ func (s *Server) Initialize() {
 	s.DB.SetMaxIdleConns(64)
 	s.DB.SetConnMaxIdleTime(40)
 
+	//init redis
+	//init redis
+	s.RedisDB = redis.NewClient(&redis.Options{
+		Addr:     os.Getenv("REDIS_HOST"),
+		Password: os.Getenv("REDIS_PASSWORD"),
+		DB:       0,
+	})
+
+	pong, err := s.RedisDB.Ping().Result()
+	log.Println(fmt.Println(pong, err))
+
 	//init Router
 	s.initializeRoutes()
 	//init Http CLient
@@ -69,14 +80,15 @@ func ValidateMail(email string) bool {
 func (s *Server) Web(wg *sync.WaitGroup) {
 	defer wg.Done()
 	addr := ":" + os.Getenv("API_PORT")
-	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "content-type", "Content-Length", "application/json", "Accept-Encoding", "Authorization", "Accept", "multipart/form-data"})
-	originsOk := handlers.AllowedOrigins([]string{"*"})
+	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "content-type", "Content-Length", "application/json", "Accept-Encoding", "Authorization", "Accept", "multipart/form-data", "Origin", "Referer"})
+	originsOk := handlers.AllowedOrigins([]string{"http://127.0.0.1", "http://localhost", "http://localhost:8080", "http://127.0.0.1:8080"})
+	credOK := handlers.AllowCredentials()
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "OPTIONS"})
 
 	log.Println("Listening to port ===>", os.Getenv("API_PORT"))
 	log.Println("============ STARTING =================")
 
-	log.Println(http.ListenAndServe(addr, handlers.CORS(originsOk, headersOk, methodsOk)(s.Router)))
+	log.Println(http.ListenAndServe(addr, handlers.CORS(originsOk, credOK, headersOk, methodsOk)(s.Router)))
 }
 
 //Health check
