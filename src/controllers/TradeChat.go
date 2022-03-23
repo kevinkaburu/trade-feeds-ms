@@ -8,19 +8,21 @@ import (
 	"os"
 	"time"
 	"trades/src/models"
+	"trades/src/utils"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/websocket"
 )
 
 var Upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
+	ReadBufferSize:  4096,
+	WriteBufferSize: 4096,
 }
 
 func (s *Server) TradeChat(w http.ResponseWriter, r *http.Request) {
 	//LiveChat
 	var response models.HttpResponse
+	Upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 
 	c, err := Upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -55,6 +57,27 @@ func (s *Server) TradeChat(w http.ResponseWriter, r *http.Request) {
 		//validate token
 		//fetch user details from redis/Auth data
 
+		tokenCookie, err := r.Cookie("vlg")
+		if err != nil {
+			log.Println("Unable to fetch tokenCookie error: ", err)
+
+			response.Message = "Unable to parse request"
+			response.Status = "400"
+			c.WriteJSON(response)
+			return
+		}
+		//fetch data from redis/ for auth
+		redisData, errr := utils.FetchDataFromRedis(tokenCookie.Value, s.RedisDB)
+		if errr != nil {
+			fmt.Printf("Redis Fetch Naounce Failed: %s\n", errr)
+		}
+		var redisWalletData models.WalletAuth
+		if err = json.Unmarshal([]byte(redisData), &redisWalletData); err != nil {
+			log.Println("Unable to parse  Redis  Json  because ", err)
+			return
+		}
+		fmt.Printf("Redis Fetch DATA: %s\n", redisData)
+
 		//select Trade Data
 		var (
 			TradeID    uint64
@@ -62,7 +85,7 @@ func (s *Server) TradeChat(w http.ResponseWriter, r *http.Request) {
 			ExternalID string
 		)
 		//fetch Offer from DB
-		selectOfferQuery := fmt.Sprintf("select t.trade_id,t.profile_id,t.external_id from trade t where trade_id =%v;", liveChat.TradeID)
+		selectOfferQuery := fmt.Sprintf("select t.trade_id,t.profile_id,t.external_id from trade t inner join profile_address pa using(profile_id) where trade_id =%v and pa.address=%v;", liveChat.TradeID, redisWalletData.Walletdata.Address)
 		err = s.DB.QueryRow(selectOfferQuery).Scan(&TradeID, &ProfileID, &ExternalID)
 		if err != nil {
 			log.Println("Unknown Trade  required")

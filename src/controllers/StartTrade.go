@@ -102,10 +102,11 @@ func (s *Server) StartTrade(w http.ResponseWriter, r *http.Request) {
 		MinFiat       float64
 		MaxFiat       float64
 		PaymentMethod string
+		FCurrencyCode string
 	)
 	//fetch Offer from DB
-	selectOfferQuery := fmt.Sprintf("select o.offer_id,o.min_fiat_amount,o.max_fiat_amount,o.provider_id,o.profile_id,o.external_id,o.status,pm.label from offer o inner join offer_payment_method opm using (offer_id) inner join payment_method pm using (payment_method_id)  where offer_id= %v", startTradePayload.OfferID)
-	err = s.DB.QueryRow(selectOfferQuery).Scan(&OfferID, &MinFiat, &MaxFiat, &ProviderID, &ProfileID, &ExternalID, &Status, &PaymentMethod)
+	selectOfferQuery := fmt.Sprintf("select o.offer_id,o.min_fiat_amount,o.max_fiat_amount,o.provider_id,o.profile_id,o.external_id,o.status,pm.label,fc.currency_code from offer o inner join offer_payment_method opm using (offer_id) inner join payment_method pm using (payment_method_id) inner join fiat_currency fc using (fiat_currency_id)  where offer_id= %v", startTradePayload.OfferID)
+	err = s.DB.QueryRow(selectOfferQuery).Scan(&OfferID, &MinFiat, &MaxFiat, &ProviderID, &ProfileID, &ExternalID, &Status, &PaymentMethod, &FCurrencyCode)
 	if err != nil {
 		log.Println("Unknown Offer  required")
 		response.Message = "Offer  not found."
@@ -216,7 +217,7 @@ func (s *Server) StartTrade(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Send Message Seller requesting for payment details
-	sms := fmt.Sprintf("Hello,\n Share your <b> %v </b> payment details.", PaymentMethod)
+	sms := fmt.Sprintf("Hi,\n I'm interested in USDT worth %v %v. \n Kindly share your %v account details.", float64(startTradePayload.FiatAmount), FCurrencyCode, PaymentMethod)
 	messageSent := s.SendMessage(NewTrade.Data.TradeHash, sms)
 	if !messageSent {
 		//cancel transaction and revert
@@ -305,8 +306,8 @@ func (s *Server) CreateTrade(offerID string, fiatAmount float64) (tradeStart mod
 	data := url.Values{}
 	data.Set("offer_hash", offerID)
 	data.Set("fiat", fmt.Sprintf("%f", fiatAmount))
-	//endpoint := fmt.Sprintf("%s/trade/start", os.Getenv("PAXFUL_BASE_URL"))
-	endpoint := ""
+	endpoint := fmt.Sprintf("%s/trade/start", os.Getenv("PAXFUL_BASE_URL"))
+	//endpoint := ""
 	//http request
 	resp, err := s.PaxfulClient.PostForm(endpoint, data)
 	if err != nil {

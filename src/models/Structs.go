@@ -100,7 +100,6 @@ type StartTradeQuery struct {
 	OfferID       StringInt   `json:"offer_id"`
 	FiatAmount    StringFloat `json:"fiat_amount"`
 	WalletAccount string      `json:"wallet_account"`
-	Token         string      `json:"token"`
 }
 
 type HttpResponse struct {
