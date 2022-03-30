@@ -38,6 +38,8 @@ func (s *Server) TradeChat(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 
+		log.Println("CHAT received: ", string(message))
+
 		err = json.Unmarshal(message, &liveChat)
 		if err != nil {
 			log.Println("Unable to parse  OfferQuery Json  because ", err)
@@ -85,10 +87,10 @@ func (s *Server) TradeChat(w http.ResponseWriter, r *http.Request) {
 			ExternalID string
 		)
 		//fetch Offer from DB
-		selectOfferQuery := fmt.Sprintf("select t.trade_id,t.profile_id,t.external_id from trade t inner join profile_address pa using(profile_id) where trade_id =%v and pa.address=%v;", liveChat.TradeID, redisWalletData.Walletdata.Address)
+		selectOfferQuery := fmt.Sprintf("select t.trade_id,t.profile_id,t.external_id from trade t inner join profile_address pa using(profile_id) where trade_id =%v and pa.address='%v';", liveChat.TradeID, redisWalletData.Walletdata.Address)
 		err = s.DB.QueryRow(selectOfferQuery).Scan(&TradeID, &ProfileID, &ExternalID)
 		if err != nil {
-			log.Println("Unknown Trade  required")
+			log.Println("Unknown Trade  required", liveChat.TradeID, redisWalletData.Walletdata.Address, err)
 			response.Message = "Trade  not found."
 			response.Status = "400"
 			c.WriteJSON(response)

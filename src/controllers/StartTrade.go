@@ -104,9 +104,20 @@ func (s *Server) StartTrade(w http.ResponseWriter, r *http.Request) {
 		PaymentMethod string
 		FCurrencyCode string
 	)
+
+	//Get current logged in user profile
+	selectProfileQuery := fmt.Sprintf("select profile_id from profile_address where address = %v", redisWalletData.Walletdata.Address)
+	err = s.DB.QueryRow(selectProfileQuery).Scan(&ProfileID)
+	if err != nil {
+		log.Println("Unable to Authenticate user.")
+		response.Message = "Offer  not found."
+		response.Status = "400"
+		HttpResponse(statusCode, response, w)
+		return
+	}
 	//fetch Offer from DB
-	selectOfferQuery := fmt.Sprintf("select o.offer_id,o.min_fiat_amount,o.max_fiat_amount,o.provider_id,o.profile_id,o.external_id,o.status,pm.label,fc.currency_code from offer o inner join offer_payment_method opm using (offer_id) inner join payment_method pm using (payment_method_id) inner join fiat_currency fc using (fiat_currency_id)  where offer_id= %v", startTradePayload.OfferID)
-	err = s.DB.QueryRow(selectOfferQuery).Scan(&OfferID, &MinFiat, &MaxFiat, &ProviderID, &ProfileID, &ExternalID, &Status, &PaymentMethod, &FCurrencyCode)
+	selectOfferQuery := fmt.Sprintf("select o.offer_id,o.min_fiat_amount,o.max_fiat_amount,o.provider_id,o.external_id,o.status,pm.label,fc.currency_code from offer o inner join offer_payment_method opm using (offer_id) inner join payment_method pm using (payment_method_id) inner join fiat_currency fc using (fiat_currency_id)  where offer_id= %v", startTradePayload.OfferID)
+	err = s.DB.QueryRow(selectOfferQuery).Scan(&OfferID, &MinFiat, &MaxFiat, &ProviderID, &ExternalID, &Status, &PaymentMethod, &FCurrencyCode)
 	if err != nil {
 		log.Println("Unknown Offer  required")
 		response.Message = "Offer  not found."

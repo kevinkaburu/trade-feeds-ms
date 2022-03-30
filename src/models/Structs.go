@@ -246,7 +246,7 @@ type OfferGetData struct {
 	Data struct {
 		OfferHash                             string      `json:"offer_hash"`
 		ID                                    string      `json:"id"`
-		Margin                                int         `json:"margin"`
+		Margin                                StringFloat `json:"margin"`
 		Active                                bool        `json:"active"`
 		BlockAnonymizerUsers                  bool        `json:"block_anonymizer_users"`
 		FiatAmountRangeMin                    int         `json:"fiat_amount_range_min"`
